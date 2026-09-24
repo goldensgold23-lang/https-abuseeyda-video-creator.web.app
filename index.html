@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="om"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abuseeyda AI Video Creator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#06150f;color:#fff;font-family:Arial,sans-serif}header{background:#075b35;padding:18px;text-align:center;position:sticky;top:0;z-index:2}h1{margin:0;font-size:21px}main{max-width:850px;margin:auto;padding:14px}.card{background:#0d281e;border:1px solid #1e4c39;border-radius:18px;padding:16px;margin-bottom:14px}
+label{display:block;margin:10px 0 6px;font-weight:bold}input,textarea,select,button{width:100%;padding:12px;border-radius:10px;border:1px solid #356b55;background:#102f24;color:#fff}textarea{min-height:110px;resize:vertical}button{background:#075b35;font-weight:bold;margin-top:9px;cursor:pointer}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.preview{background:#000;border-radius:15px;overflow:hidden}canvas{width:100%;display:block}.small{font-size:13px;opacity:.75}a{display:block;background:#159447;color:#fff;text-align:center;text-decoration:none;padding:12px;border-radius:10px;margin-top:10px}
+</style></head><body>
+<header><h1>🎬 Abuseeyda AI Video Creator</h1></header><main>
+<div class="card">
+<label>🖼️ Suuraa</label><input id="img" type="file" accept="image/*">
+<label>📝 Text / Sagalee</label><textarea id="txt" placeholder="Text kee asitti barreessi..."></textarea>
+<div class="row"><div><label>⏱️ Duration (sec)</label><input id="dur" type="number" value="5" min="2" max="60"></div>
+<div><label>📐 Ratio</label><select id="ratio"><option>16:9</option><option>9:16</option><option>1:1</option></select></div></div>
+<label>🔊 Sagalee</label><select id="voice"></select>
+<button id="speak">🔊 Text Dhaggeeffadhu</button>
+<button id="make">🎥 Video Uumi + Sagalee</button>
+<p id="status" class="small"></p><a id="dl" style="display:none">⬇️ Video Buufadhu</a>
+</div>
+<div class="card preview"><canvas id="c" width="1280" height="720"></canvas></div>
+</main>
+<script>
+const img=document.querySelector('#img'),txt=document.querySelector('#txt'),c=document.querySelector('#c'),x=c.getContext('2d');
+const voices=document.querySelector('#voice'),status=document.querySelector('#status'),dl=document.querySelector('#dl');
+let picture=null;
+function resize(){let r=document.querySelector('#ratio').value;if(r==='16:9'){c.width=1280;c.height=720}else if(r==='9:16'){c.width=720;c.height=1280}else{c.width=c.height=1000}draw()}
+function draw(){x.fillStyle='#000';x.fillRect(0,0,c.width,c.height);if(!picture)return;
+let s=Math.max(c.width/picture.width,c.height/picture.height),w=picture.width*s,h=picture.height*s;x.drawImage(picture,(c.width-w)/2,(c.height-h)/2,w,h);
+if(txt.value.trim()){x.fillStyle='rgba(0,0,0,.58)';x.fillRect(0,c.height-120,c.width,120);x.fillStyle='#fff';x.font='bold 42px Arial';x.textAlign='center';x.textBaseline='middle';x.fillText(txt.value.substring(0,90),c.width/2,c.height-60)}
+}
+img.onchange=()=>{let f=img.files[0];if(!f)return;picture=new Image();picture.onload=draw;picture.src=URL.createObjectURL(f)}
+document.querySelector('#ratio').onchange=resize;txt.oninput=draw;
+function loadVoices(){voices.innerHTML='';speechSynthesis.getVoices().forEach((v,i)=>{let o=document.createElement('option');o.value=i;o.textContent=v.name+' ('+v.lang+')';voices.appendChild(o)})}loadVoices();speechSynthesis.onvoiceschanged=loadVoices;
+document.querySelector('#speak').onclick=()=>{if(!txt.value.trim())return alert('Text barreessi.');speechSynthesis.cancel();let a=new SpeechSynthesisUtterance(txt.value);let vs=speechSynthesis.getVoices();a.voice=vs[voices.value]||null;a.rate=.9;speechSynthesis.speak(a)};
+async function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+document.querySelector('#make').onclick=async()=>{
+if(!picture||!txt.value.trim())return alert('Suuraa fi text lamaan galchi.');
+if(!c.captureStream||!window.MediaRecorder)return alert('Chrome browser haaraa fayyadami.');
+let sec=Math.max(2,Number(document.querySelector('#dur').value)||5),stream=c.captureStream(30),chunks=[];
+let rec=new MediaRecorder(stream,{mimeType:'video/webm'});rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+rec.onstop=()=>{let blob=new Blob(chunks,{type:'video/webm'}),url=URL.createObjectURL(blob);dl.href=url;dl.download='abuseeyda-ai-video.webm';dl.style.display='block';status.textContent='✅ Video qophaa’eera.'};
+rec.start();draw();status.textContent='🎬 Video fi sagalee qopheessaa jira...';
+speechSynthesis.cancel();let a=new SpeechSynthesisUtterance(txt.value),vs=speechSynthesis.getVoices();a.voice=vs[voices.value]||null;a.rate=.9;
+speechSynthesis.speak(a);await sleep(sec*1000);rec.stop();speechSynthesis.cancel();
+};
+resize();
+</script></body></html>
